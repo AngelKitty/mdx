@@ -10,6 +10,8 @@ wp_enqueue_script('my-upload', get_bloginfo('template_url' ).'/js/admin_upload.j
 wp_enqueue_script('thickbox');
 //加载css(wp自带)
 wp_enqueue_style('thickbox');
+wp_enqueue_style('wp-color-picker');
+wp_enqueue_script('wp-color-picker');
 ?>
 <div class="wrap"><h1><?php _e('MDx 主题 - 样式', 'mdx');?></h1>
 <?php
@@ -34,6 +36,7 @@ if((isset($_POST['mdx_ref']) && $_POST['mdx_ref'] == 'true') && check_admin_refe
         'brown'=>'#795548',
         'grey'=>'#9e9e9e',
         'blue-grey'=>'#607d8b',
+        'white'=>'#9e9e9e',
     );
     $mdx_act_arr=array(
         'red'=>'#ff5252',
@@ -64,11 +67,13 @@ if((isset($_POST['mdx_ref']) && $_POST['mdx_ref'] == 'true') && check_admin_refe
     }
     mdx_update_option('mdx_md2', $_POST['mdx_md2']);
     mdx_update_option('mdx_md2_font', $_POST['mdx_md2_font']);
+    mdx_update_option('mdx_login_md', $_POST['mdx_login_md']);
     mdx_update_option('mdx_chrome_color', $_POST['mdx_chrome_color']);
     mdx_update_option('mdx_title_bar', $_POST['mdx_title_bar']);
     mdx_update_option('mdx_default_style', $_POST['mdx_default_style']);
     mdx_update_option('mdx_index_show', $_POST['mdx_index_show']);
     mdx_update_option('mdx_post_style', $_POST['mdx_post_style']);
+    mdx_update_option('mdx_post_nav_style', $_POST['mdx_post_nav_style']);
     mdx_update_option('mdx_echo_post_sum', $_POST['mdx_echo_post_sum']);
     mdx_update_option('mdx_post_list_img_height', $_POST['mdx_post_list_img_height']);
     mdx_update_option('mdx_post_def_img', $_POST['mdx_post_def_img']);
@@ -91,11 +96,7 @@ if((isset($_POST['mdx_ref']) && $_POST['mdx_ref'] == 'true') && check_admin_refe
     mdx_update_option('mdx_logo_text', $_POST['mdx_logo_text']);
     mdx_update_option('mdx_safari', $_POST['mdx_safari']);
     mdx_update_option('mdx_svg', $_POST['mdx_svg']);
-    if($_POST['mdx_svg_color']=='--SaveToUseTheThemeColor--'){
-        mdx_update_option('mdx_svg_color', $mdx_color_arr[$_POST['mdx_styles']]);
-    }else{
-        mdx_update_option('mdx_svg_color', $_POST['mdx_svg_color']);
-    }
+    mdx_update_option('mdx_svg_color', $_POST['mdx_svg_color']);
     mdx_update_option('mdx_tags_color', $_POST['mdx_tags_color']);
     mdx_update_option('mdx_styles_footer', $_POST['mdx_styles_footer']);
     mdx_update_option('mdx_footer_say', htmlentities(stripslashes($_POST['mdx_footer_say'])));
@@ -147,6 +148,7 @@ wp_nonce_field('mdx_options_update');
     <option value="brown" <?php if($mdx_v_styles=='brown'){?>selected="selected"<?php }?>>Brown</option>
     <option value="grey" <?php if($mdx_v_styles=='grey'){?>selected="selected"<?php }?>>Grey</option>
     <option value="blue-grey" <?php if($mdx_v_styles=='blue-grey'){?>selected="selected"<?php }?>>Blue Grey</option>
+    <option value="white" <?php if($mdx_v_styles=='white'){?>selected="selected"<?php }?>>White</option>
 </select>
 <p class="description"><span class="mdx-color-preview mdx-theme-color-preview"></span> <?php _e('主题颜色会影响所有页面的主色。', 'mdx');?></p>
 </td>
@@ -212,6 +214,17 @@ wp_nonce_field('mdx_options_update');
 </tr>
 <tr><td> </td></tr>
 <tr>
+<th scope="row"><?php _e('登录页 Material Design', 'mdx');?></th>
+<td>
+<?php $mdx_v_login_md=mdx_get_option('mdx_login_md');?>
+    <fieldset>
+    <label><input type="radio" name="mdx_login_md" value="true" <?php if($mdx_v_login_md=='true'){?>checked="checked"<?php }?>> <?php echo $trueon;?></label><br>
+    <label><input type="radio" name="mdx_login_md" value="false" <?php if($mdx_v_login_md=='false'){?>checked="checked"<?php }?>> <?php echo $falseoff;?></label><br>
+    <p class="description"><?php _e('将 Material Design 样式应用到登录页。可能与部分插件样式不兼容。', 'mdx');?></p>
+    </fieldset>
+</td>
+</tr>
+<tr><td> </td></tr>
 <th scope="row"><?php _e('移动 Chrome 标题栏颜色', 'mdx');?></th>
 <td>
 <?php $mdx_v_chrome_color=mdx_get_option('mdx_chrome_color');?>
@@ -272,6 +285,17 @@ wp_nonce_field('mdx_options_update');
 </select>
 <div class="mdx-svg-preview" id="mdx-post-preview"></div>
 <p class="description"><?php _e('同时影响文章页、单独页面的样式。', 'mdx');?></p>
+</td>
+</tr>
+<tr>
+<th scope="row"><label for="mdx_post_nav_style"><?php _e('文章导航栏配色方案', 'mdx');?></label></th>
+<td>
+<?php $mdx_v_post_nav_style=mdx_get_option('mdx_post_nav_style');?>
+<select name="mdx_post_nav_style" id="mdx_post_style">
+    <option value="0" <?php if($mdx_v_post_nav_style=='0'){?>selected="selected"<?php }?>><?php _e('主题色', 'mdx');?></option>
+    <option value="1" <?php if($mdx_v_post_nav_style=='1'){?>selected="selected"<?php }?>><?php _e('低饱和度', 'mdx');?></option>
+</select>
+<p class="description"><?php _e('影响文章末尾文章导航栏区域的配色。', 'mdx');?></p>
 </td>
 </tr>
 <tr><td> </td></tr>
@@ -492,8 +516,8 @@ wp_nonce_field('mdx_options_update');
 </tr>
 <tr>
 <th scope="row"><label for="mdx_svg_color"><?php _e('Touch Bar 图标背景颜色', 'mdx');?></label></th>
-<td><input class="mdx_stbsip regular-text mdx_stbsip3" name="mdx_svg_color" type="text" id="mdx_svg_color" value="<?php echo esc_attr(mdx_get_option('mdx_svg_color'))?>" required="required">
-<button type="button" id="change-color" class="button mdx_stbsip5"><?php _e('使用当前主题颜色', 'mdx');?></button>
+<td><input class="mdx_stbsip regular-text mdx_stbsip3" name="mdx_svg_color" type="text" id="mdx_svg_color" value="<?php echo esc_attr(mdx_get_option('mdx_svg_color'))?>" required="required"><br>
+<a id="change-color" class="button mdx_stbsip5" href="javascript:jQuery('#mdx_svg_color').val('<?php echo mdx_get_option('mdx_styles_hex');?>');jQuery('#mdx_svg_color').wpColorPicker('color', '<?php echo mdx_get_option('mdx_styles_hex');?>');"><?php _e('使用当前主题颜色', 'mdx');?></a>
 <p class="description" id="mdx_footer"><?php _e('请设置 Touch Bar 图标背景颜色。16进制颜色或 RGB 颜色。', 'mdx');?></p></td>
 </tr>
 <tr><td> </td></tr>
@@ -530,6 +554,126 @@ wp_nonce_field('mdx_options_update');
 </tr>
 <tr>
     <th scope="row"><label for="mdx_footer"><?php _e('页脚内容', 'mdx');?></label></th>
-    <td><textarea name="mdx_footer" id="mdx_footer" rows="7" cols="50"><?php echo mdx_get_option('mdx_footer')?></textarea>
-    <p class="description"><?php _e('在这里编辑页脚内容。支持 <code>HTML</code> 格式.', 'mdx');?></p></td>
-</tr></table><?php submit_button(); ?></form></div>
+    <td><textarea name="mdx_footer" id="mdx_footer" rows="7" cols="50"><?php echo mdx_get_option('mdx_footer')?></textarea><br><a class="thickbox button" title="<?php _e('社交网站图标编辑器', 'mdx');?>" href="#TB_inline?height=100%&width=100%&inlineId=social-network-editor" style="margin-top: 5px;"><?php _e('社交网站图标编辑器', 'mdx');?></a>
+    <p class="description"><?php _e('在这里编辑页脚内容。支持 <code>HTML</code> 格式。', 'mdx');?></p></td>
+</tr></table>
+<div id="social-network-editor" style="display:none;">
+<br>
+<p class="description"><?php _e('在这里获取受 MDx 样式支持的社交网站图标链接。填写完成之后，你可以将获取到的代码粘贴到包括页脚内容在内的任何地方或是自定义代码内容。未填写的项目将被忽略。', 'mdx');?></p>
+<table class="form-table">
+<tr>
+<th scope="row"><label for="mdx_sn_qq"><?php _e('QQ', 'mdx');?></label></th>
+<td><input class="regular-text" name="mdx_sn_qq" type="text" id="mdx_sn_qq" value="" placeholder="<?php _e('QQ 号', 'mdx');?>" oninput="input_onchange()" data-alt="<?php _e('QQ', 'mdx');?>"></td>
+</tr>
+<tr>
+<th scope="row"><label for="mdx_sn_wechat"><?php _e('微信', 'mdx');?></label></th>
+<td><input class="regular-text" name="mdx_sn_wechat" type="text" id="mdx_sn_wechat" value="" placeholder="<?php _e('微信二维码图片链接', 'mdx');?>" oninput="input_onchange()" data-alt="<?php _e('微信', 'mdx');?>"></td>
+</tr>
+<tr>
+<th scope="row"><label for="mdx_sn_weibo"><?php _e('微博', 'mdx');?></label></th>
+<td><input class="regular-text" name="mdx_sn_weibo" type="text" id="mdx_sn_weibo" value="" placeholder="<?php _e('微博链接', 'mdx');?>" oninput="input_onchange()" data-alt="<?php _e('微博', 'mdx');?>"></td>
+</tr>
+<tr>
+<th scope="row"><label for="mdx_sn_zhihu"><?php _e('知乎', 'mdx');?></label></th>
+<td><input class="regular-text" name="mdx_sn_zhihu" type="text" id="mdx_sn_zhihu" value="" placeholder="<?php _e('知乎链接', 'mdx');?>" oninput="input_onchange()" data-alt="<?php _e('知乎', 'mdx');?>"></td>
+</tr>
+<tr>
+<th scope="row"><label for="mdx_sn_bilibili"><?php _e('哔哩哔哩', 'mdx');?></label></th>
+<td><input class="regular-text" name="mdx_sn_bilibili" type="text" id="mdx_sn_bilibili" value="" placeholder="<?php _e('哔哩哔哩链接', 'mdx');?>" oninput="input_onchange()" data-alt="<?php _e('哔哩哔哩', 'mdx');?>"></td>
+</tr>
+<tr>
+<th scope="row"><label for="mdx_sn_neteasemusic"><?php _e('网易云音乐', 'mdx');?></label></th>
+<td><input class="regular-text" name="mdx_sn_neteasemusic" type="text" id="mdx_sn_neteasemusic" value="" placeholder="<?php _e('网易云音乐链接', 'mdx');?>" oninput="input_onchange()" data-alt="<?php _e('网易云音乐', 'mdx');?>"></td>
+</tr>
+<tr>
+<th scope="row"><label for="mdx_sn_coolapk"><?php _e('酷安', 'mdx');?></label></th>
+<td><input class="regular-text" name="mdx_sn_coolapk" type="text" id="mdx_sn_coolapk" value="" placeholder="<?php _e('酷安链接', 'mdx');?>" oninput="input_onchange()" data-alt="<?php _e('酷安', 'mdx');?>"></td>
+</tr>
+<tr>
+<th scope="row"><label for="mdx_sn_douban"><?php _e('豆瓣', 'mdx');?></label></th>
+<td><input class="regular-text" name="mdx_sn_douban" type="text" id="mdx_sn_douban" value="" placeholder="<?php _e('豆瓣链接', 'mdx');?>" oninput="input_onchange()" data-alt="<?php _e('豆瓣', 'mdx');?>"></td>
+</tr>
+<tr>
+<th scope="row"><label for="mdx_sn_github"><?php _e('GitHub', 'mdx');?></label></th>
+<td><input class="regular-text" name="mdx_sn_github" type="text" id="mdx_sn_github" value="" placeholder="<?php _e('GitHub 用户名', 'mdx');?>" oninput="input_onchange()" data-alt="<?php _e('GitHub', 'mdx');?>"></td>
+</tr>
+<tr>
+<th scope="row"><label for="mdx_sn_facebook"><?php _e('Facebook', 'mdx');?></label></th>
+<td><input class="regular-text" name="mdx_sn_facebook" type="text" id="mdx_sn_facebook" value="" placeholder="<?php _e('Fackbook 链接', 'mdx');?>" oninput="input_onchange()" data-alt="<?php _e('Facebook', 'mdx');?>"></td>
+</tr>
+<tr>
+<th scope="row"><label for="mdx_sn_twitter"><?php _e('Twitter', 'mdx');?></label></th>
+<td><input class="regular-text" name="mdx_sn_twitter" type="text" id="mdx_sn_twitter" value="" placeholder="<?php _e('Twitter 用户名', 'mdx');?>" oninput="input_onchange()" data-alt="<?php _e('Twitter', 'mdx');?>"></td>
+</tr>
+<tr>
+<th scope="row"><label for="mdx_sn_telegram"><?php _e('Telegram', 'mdx');?></label></th>
+<td><input class="regular-text" name="mdx_sn_telegram" type="text" id="mdx_sn_telegram" value="" placeholder="<?php _e('Telegram 用户名', 'mdx');?>" oninput="input_onchange()" data-alt="<?php _e('Telegram', 'mdx');?>"></td>
+</tr>
+<tr>
+<th scope="row"><label for="mdx_sn_steam"><?php _e('Steam', 'mdx');?></label></th>
+<td><input class="regular-text" name="mdx_sn_steam" type="text" id="mdx_sn_steam" value="" placeholder="<?php _e('Steam 用户名', 'mdx');?>" oninput="input_onchange()" data-alt="<?php _e('Steam', 'mdx');?>"></td>
+</tr>
+<tr>
+<th scope="row"><label for="mdx_sn_whatsapp"><?php _e('WhatsApp', 'mdx');?></label></th>
+<td><input class="regular-text" name="mdx_sn_whatsapp" type="text" id="mdx_sn_whatsapp" value="" placeholder="<?php _e('WhatsApp 链接', 'mdx');?>" oninput="input_onchange()" data-alt="<?php _e('WhatsApp', 'mdx');?>"></td>
+</tr>
+<tr>
+<th scope="row"><label for="mdx_sn_instagram"><?php _e('Instagram', 'mdx');?></label></th>
+<td><input class="regular-text" name="mdx_sn_instagram" type="text" id="mdx_sn_instagram" value="" placeholder="<?php _e('Instagram 链接', 'mdx');?>" oninput="input_onchange()" data-alt="<?php _e('Instagram', 'mdx');?>"></td>
+</tr>
+<tr>
+<th scope="row"><label for="mdx_sn_dribbble"><?php _e('Dribbble', 'mdx');?></label></th>
+<td><input class="regular-text" name="mdx_sn_dribbble" type="text" id="mdx_sn_dribbble" value="" placeholder="<?php _e('Dribbble 链接', 'mdx');?>" oninput="input_onchange()" data-alt="<?php _e('Dribbble', 'mdx');?>"></td>
+</tr>
+<tr>
+<th scope="row"><label for="mdx_sn_behance"><?php _e('Behance', 'mdx');?></label></th>
+<td><input class="regular-text" name="mdx_sn_behance" type="text" id="mdx_sn_behance" value="" placeholder="<?php _e('Behance 链接', 'mdx');?>" oninput="input_onchange()" data-alt="<?php _e('Behance', 'mdx');?>"></td>
+</tr>
+<tr>
+<th scope="row"><label for="mdx_sn_tel"><?php _e('电话', 'mdx');?></label></th>
+<td><input class="regular-text" name="mdx_sn_tel" type="text" id="mdx_sn_tel" value="" placeholder="<?php _e('电话号码', 'mdx');?>" oninput="input_onchange()" data-alt="<?php _e('电话', 'mdx');?>"></td>
+</tr>
+<tr>
+<th scope="row"><label for="mdx_sn_email"><?php _e('邮箱', 'mdx');?></label></th>
+<td><input class="regular-text" name="mdx_sn_email" type="text" id="mdx_sn_email" value="" placeholder="<?php _e('邮箱地址', 'mdx');?>" oninput="input_onchange()" data-alt="<?php _e('邮箱', 'mdx');?>"></td>
+</tr>
+<tr>
+<th scope="row"><label for="mdx_sn_personalpage"><?php _e('个人主页', 'mdx');?></label></th>
+<td><input class="regular-text" name="mdx_sn_personalpage" type="text" id="mdx_sn_personalpage" value="" placeholder="<?php _e('个人主页地址', 'mdx');?>" oninput="input_onchange()" data-alt="<?php _e('个人主页', 'mdx');?>"></td>
+</tr>
+<tr><th> </th></tr>
+<tr>
+    <th scope="row"><label for="mdx_sn_result"><?php _e('生成结果', 'mdx');?></label></th>
+    <td><textarea name="mdx_sn_result" id="mdx_sn_result" rows="10" cols="53" readonly></textarea></td>
+</tr>
+</table>
+<script>
+function input_onchange(ele){
+    var html_str = "";
+    for(ele of jQuery("#TB_ajaxContent .regular-text")){
+        if(jQuery(ele).val() !== ""){
+            if(jQuery(ele).attr("id") === "mdx_sn_qq"){
+                html_str += '<!-- qq -->\n<i class="mdx-sn-icon mdx_sn_qq" mdui-tooltip="{content: \''+jQuery(ele).val()+'\', position: \'top\'}" title="'+jQuery(ele)[0].dataset.alt+'"> </i>\n';
+            }else if(jQuery(ele).attr("id") === "mdx_sn_wechat"){
+                html_str += '<!-- wechat -->\n<span style="--background:url('+jQuery(ele).val()+')" class="mdx-sn-wechat-qr"><i class="mdx-sn-icon mdx_sn_wechat" title="'+jQuery(ele)[0].dataset.alt+'"> </i></span>\n';
+            }else if(jQuery(ele).attr("id") === "mdx_sn_tel"){
+                html_str += '<!-- tel -->\n<a href="tel:'+jQuery(ele).val()+'"><i class="mdx-sn-icon mdx_sn_tel" mdui-tooltip="{content: \''+jQuery(ele).val()+'\', position: \'top\'}" title="'+jQuery(ele)[0].dataset.alt+'"> </i></a>\n';
+            }else if(jQuery(ele).attr("id") === "mdx_sn_github"){
+                html_str += '<!-- github -->\n<a href="https://github.com/'+jQuery(ele).val()+'"><i class="mdx-sn-icon mdx_sn_github" mdui-tooltip="{content: \'@'+jQuery(ele).val()+'\', position: \'top\'}" title="'+jQuery(ele)[0].dataset.alt+'"> </i></a>\n';
+            }else if(jQuery(ele).attr("id") === "mdx_sn_twitter"){
+                html_str += '<!-- twitter -->\n<a href="https://twitter.com/'+jQuery(ele).val()+'"><i class="mdx-sn-icon mdx_sn_twitter" mdui-tooltip="{content: \'@'+jQuery(ele).val()+'\', position: \'top\'}" title="'+jQuery(ele)[0].dataset.alt+'"> </i></a>\n';
+            }else if(jQuery(ele).attr("id") === "mdx_sn_telegram"){
+                html_str += '<!-- telegram -->\n<a href="https://t.me/'+jQuery(ele).val()+'"><i class="mdx-sn-icon mdx_sn_telegram" mdui-tooltip="{content: \'@'+jQuery(ele).val()+'\', position: \'top\'}" title="'+jQuery(ele)[0].dataset.alt+'"> </i></a>\n';
+            }else if(jQuery(ele).attr("id") === "mdx_sn_steam"){
+                html_str += '<!-- steam -->\n<a href="https://steamcommunity.com/id/'+jQuery(ele).val()+'"><i class="mdx-sn-icon mdx_sn_steam" mdui-tooltip="{content: \''+jQuery(ele).val()+'\', position: \'top\'}" title="'+jQuery(ele)[0].dataset.alt+'"> </i></a>\n';
+            }else if(jQuery(ele).attr("id") === "mdx_sn_email"){
+                html_str += '<!-- email -->\n<a href="mailto:'+jQuery(ele).val()+'"><i class="mdx-sn-icon mdx_sn_email" mdui-tooltip="{content: \''+jQuery(ele).val()+'\', position: \'top\'}" title="'+jQuery(ele)[0].dataset.alt+'"> </i></a>\n';
+            }else{
+                html_str += '<!-- '+jQuery(ele).attr("id").split("_").pop()+' -->\n<a href="'+jQuery(ele).val()+'"><i class="mdx-sn-icon '+jQuery(ele).attr("id")+'" title="'+jQuery(ele)[0].dataset.alt+'"> </i></a>\n';
+            }
+        }
+    }
+    jQuery("#mdx_sn_result").text(html_str);
+}
+</script>
+</div><?php submit_button(); ?></form></div>

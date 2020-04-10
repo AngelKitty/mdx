@@ -28,6 +28,7 @@ if((isset($_POST['mdx_ref']) && $_POST['mdx_ref'] == 'true') && check_admin_refe
     mdx_update_option('mdx_open_side', $_POST['mdx_open_side']);
     mdx_update_option('mdx_widget', $_POST['mdx_widget']);
     mdx_update_option('mdx_cookie', htmlentities(stripslashes($_POST['mdx_cookie'])));
+    mdx_update_option('mdx_cookie_flag', $_POST['mdx_cookie_flag']);
     mdx_update_option('mdx_allow_scale', $_POST['mdx_allow_scale']);
     mdx_update_option('mdx_reduce_motion', $_POST['mdx_reduce_motion']);
     mdx_update_option('mdx_img_box', $_POST['mdx_img_box']);
@@ -36,7 +37,9 @@ if((isset($_POST['mdx_ref']) && $_POST['mdx_ref'] == 'true') && check_admin_refe
     mdx_update_option('mdx_read_pro', $_POST['mdx_read_pro']);
     mdx_update_option('mdx_auto_scroll', $_POST['mdx_auto_scroll']);
     mdx_update_option('mdx_toc', $_POST['mdx_toc']);
+    mdx_update_option('mdx_toc_preview', $_POST['mdx_toc_preview']);
     mdx_update_option('mdx_load_pro', $_POST['mdx_load_pro']);
+    mdx_update_option('mdx_post_list_click_area', $_POST['mdx_post_list_click_area']);
     mdx_update_option('mdx_post_list_1', $_POST['mdx_post_list_1']);
     mdx_update_option('mdx_post_list_2', $_POST['mdx_post_list_2']);
     mdx_update_option('mdx_post_list_3', $_POST['mdx_post_list_3']);
@@ -163,7 +166,9 @@ if(stripos(explode('//', home_url())[1], "/")){
 <tr>
 <th scope="row"><label for="mdx_cookie"><?php _e('Cookie 使用提示 (GDPR)', 'mdx');?></label></th>
     <td><textarea name="mdx_cookie" id="mdx_cookie" rows="7" cols="50"><?php echo esc_attr(mdx_get_option('mdx_cookie'))?></textarea>
-    <p class="description"><?php _e('Cookie 使用提示将会在用户第一次访问站点时显示，以向用户说明你站点的 Cookie 政策。如果你的站点有来自欧盟地区的访客，此选项可能会很有用。<br>在这里编辑 Cookie 使用提示，支持 <code>HTML</code>，留空则不会显示。', 'mdx');?></p></td>
+    <p class="description"><?php _e('Cookie 使用提示将会在用户第一次访问站点时显示，以向用户说明你站点的 Cookie 政策。如果你的站点有来自欧盟地区的访客，此选项可能会很有用。<br>在这里编辑 Cookie 使用提示，支持 <code>HTML</code>，留空则不会显示。<br>在 Safari 中，受到浏览器政策影响，提示隐藏时间最多为 7 天（不与网站交互）。要重置所有访客看到此提示的状态以向所有访客显示新的提示，请点击下方的重置按钮。', 'mdx');?></p><br>
+    <a id="reset-cookie" class="button" href="javascript:jQuery('#mdx_cookie_flag').val('mdx_cookie_<?php echo sha1(time())?>');jQuery('#reset-cookie').attr('disabled', 'disabled');jQuery('#reseted').show();"><?php _e('重置显示状态', 'mdx');?></a><span id="reseted" style="color:green;display:none;padding-left:10px;vertical-align:sub"><?php _e('重置成功，保存设置后生效。', 'mdx');?></span></td>
+    <input type="hidden" value="<?php echo mdx_get_option('mdx_cookie_flag');?>" name="mdx_cookie_flag" id="mdx_cookie_flag">
 </tr>
 <tr><td> </td></tr>
 <tr>
@@ -241,9 +246,20 @@ if(stripos(explode('//', home_url())[1], "/")){
 <td>
 <?php $mdx_v_toc=mdx_get_option('mdx_toc');?>
     <fieldset>
-    <label><input type="radio" name="mdx_toc" value="true" <?php if($mdx_v_toc=='true'){?>checked="checked"<?php }?>> <?php echo $trueon;?></label><br>
-    <label><input type="radio" name="mdx_toc" value="false" <?php if($mdx_v_toc=='false'){?>checked="checked"<?php }?>> <?php echo $falseoff;?></label><br>
+    <label><input type="radio" name="mdx_toc" class="mdx_toc" value="true" <?php if($mdx_v_toc=='true'){?>checked="checked"<?php }?>> <?php echo $trueon;?></label><br>
+    <label><input type="radio" name="mdx_toc" class="mdx_toc" value="false" <?php if($mdx_v_toc=='false'){?>checked="checked"<?php }?>> <?php echo $falseoff;?></label><br>
     <p class="description"><?php _e('开启后，侧边栏会显示文章目录。', 'mdx');?></p>
+    </fieldset>
+</td>
+</tr>
+<tr>
+<th scope="row"><?php _e('文章目录缩略显示', 'mdx');?></th>
+<td>
+<?php $mdx_v_toc_preview=mdx_get_option('mdx_toc_preview');?>
+    <fieldset>
+    <label><input type="radio" name="mdx_toc_preview" class="mdx_toc_preview" value="true" <?php if($mdx_v_toc_preview=='true'){?>checked="checked"<?php }?>> <?php echo $trueon;?></label><br>
+    <label><input type="radio" name="mdx_toc_preview" class="mdx_toc_preview" value="false" <?php if($mdx_v_toc_preview=='false'){?>checked="checked"<?php }?>> <?php echo $falseoff;?></label><br>
+    <p class="description"><?php _e('开启后，桌面端文章左侧会显示简略目录，点击即可打开完整目录。', 'mdx');?></p>
     </fieldset>
 </td>
 </tr>
@@ -257,8 +273,17 @@ if(stripos(explode('//', home_url())[1], "/")){
     <p class="description"><?php _e('开启后，文章/单独页面加载时会在页面顶部显示加载进度条（仅动画，非真实进度），页面加载完成后消失。', 'mdx');?></p>
     </fieldset>
 </td>
-</tr>
 <tr><td> </td></tr>
+<tr>
+<th scope="row"><label for="mdx_post_list_click_area"><?php _e('文章列表链接可点击区域', 'mdx');?></lable></th>
+<td>
+<?php $mdx_v_post_list_click_area=mdx_get_option('mdx_post_list_click_area');?>
+<select name="mdx_post_list_click_area" id="mdx_post_list_click_area">
+    <option value="title" <?php if($mdx_v_post_list_click_area=='title'){?>selected="selected"<?php }?>><?php _e("仅标题", "mdx");?></option>
+    <option value="pic" <?php if($mdx_v_post_list_click_area=='pic'){?>selected="selected"<?php }?>><?php echo _e("标题和文章特色图像", "mdx");?></option>
+</select>
+</td>
+</tr>
 <tr>
 <th scope="row"><label for="mdx_post_list_1"><?php _e('文章列表详细信息 - 位置1', 'mdx');?></label></th>
 <td>
